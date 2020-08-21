@@ -6,5 +6,5 @@ use test::Bencher;
 
 #[bench]
 fn bench_ring(b: &mut Bencher) {
-    b.iter(|| petgraph_gen::classic::ring::<u32, _>(10000, ()));
+    b.iter(|| petgraph_gen::random_graph::barabasi_albert_graph::<(),()>(10000,2,()));
 }
