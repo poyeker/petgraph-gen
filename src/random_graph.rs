@@ -44,15 +44,15 @@ impl<T, U: Clone> ToWattsStrogatzGraph<U> for UnGraph<T, U> {
     }
 }
 
-pub fn watts_strogatz_graph<T: Default, U: Clone>(n: usize, k: usize, p: f64, weight: U) -> UnGraph<T, U> {
+pub fn watts_strogatz_graph<T: Default, U: Clone+Default>(n: usize, k: usize, p: f64) -> UnGraph<T, U> {
     let mut g = init_graph(n);
-    g.to_watts_strogatz_graph(k, p, weight.clone());
+    g.to_watts_strogatz_graph(k, p,U::default());
     g
 }
 
-pub fn connected_watts_strogatz_graph<T: Default, U: Clone>(n: usize, k: usize, p: f64, weight: U, tries: usize) -> Result<UnGraph<T, U>, String> {
+pub fn connected_watts_strogatz_graph<T: Default, U: Clone+Default>(n: usize, k: usize, p: f64,  tries: usize) -> Result<UnGraph<T, U>, String> {
     for _ in 0..tries {
-        let g: UnGraph<T, U> = watts_strogatz_graph(n, k, p, weight.clone());
+        let g: UnGraph<T, U> = watts_strogatz_graph(n, k, p);
         if connected_components(&g) == 1 { return Ok(g); }
     }
     return Err("Construction of graph failed!".into());
@@ -74,13 +74,13 @@ impl<T, U: Clone> ToErdosRenyiGraph<U> for UnGraph<T, U> {
     }
 }
 
-pub fn erdos_renyi_graph<T: Default, U: Clone>(n: usize, p: f64, weight: U) -> UnGraph<T, U> {
+pub fn erdos_renyi_graph<T: Default, U: Clone+Default>(n: usize, p: f64) -> UnGraph<T, U> {
     let mut g = init_graph(n);
-    g.to_erdos_renyi_graph(p, weight.clone());
+    g.to_erdos_renyi_graph(p, U::default());
     g
 }
 
-pub fn barabasi_albert_graph<T: Default, U: Clone>(n: usize, m: usize, weight: U) -> UnGraph<T, U> {
+pub fn barabasi_albert_graph<T: Default, U: Clone+Default>(n: usize, m: usize) -> UnGraph<T, U> {
     let mut g = init_graph::<T, U>(0);
     let mut targets = (0..m).map(|_| g.add_node(T::default())).collect::<Vec<_>>();
     let mut repeated_nodes: Vec<NodeIndex> = vec![];
@@ -88,7 +88,7 @@ pub fn barabasi_albert_graph<T: Default, U: Clone>(n: usize, m: usize, weight: U
     let mut rng = thread_rng();
     while g.node_count() <= n {
         for (a, &b) in repeat_n(source, m).zip(targets.iter()) {
-            g.add_edge(a, b, weight.clone());
+            g.add_edge(a, b, U::default());
         }
         repeated_nodes.extend(targets);
         repeated_nodes.extend(repeat_n(source, m));
