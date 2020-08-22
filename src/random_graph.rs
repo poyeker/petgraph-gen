@@ -1,10 +1,10 @@
-use petgraph::prelude::*;
 use petgraph::algo::*;
+use petgraph::prelude::*;
 
-use simple_rand::*;
 use crate::classic::ToCompleteGraph;
 use crate::common::init_graph;
-use itertools::{Itertools, repeat_n};
+use itertools::{repeat_n, Itertools};
+use simple_rand::*;
 
 pub trait ToWattsStrogatzGraph<U: Clone> {
     fn to_watts_strogatz_graph(&mut self, k: usize, p: f64, weight: U);
@@ -26,13 +26,18 @@ impl<T, U: Clone> ToWattsStrogatzGraph<U> for UnGraph<T, U> {
             }
             let mut rng = make_rng!();
             for j in 1..(k / 2 + 1) {
-                let target = self.node_indices().skip(j).chain(self.node_indices().take(j));
+                let target = self
+                    .node_indices()
+                    .skip(j)
+                    .chain(self.node_indices().take(j));
                 for (u, v) in self.node_indices().zip(target) {
                     if rng.rand_float(0., 1.) < p {
-                        let mut w = rng.choice(self.node_indices());
+                        let mut w = rng.one_of(&self.node_indices().collect::<Vec<_>>());
                         while w == u || self.contains_edge(w, u) {
-                            w = rng.choice(self.node_indices());
-                            if self.neighbors(u).count() > n - 1 { break; }
+                            w = rng.one_of(&self.node_indices().collect::<Vec<_>>());
+                            if self.neighbors(u).count() > n - 1 {
+                                break;
+                            }
                         }
 
                         self.remove_edge(self.find_edge(u, v).unwrap());
@@ -44,16 +49,27 @@ impl<T, U: Clone> ToWattsStrogatzGraph<U> for UnGraph<T, U> {
     }
 }
 
-pub fn watts_strogatz_graph<T: Default, U: Clone>(n: usize, k: usize, p: f64, weight: U) -> UnGraph<T, U> {
+pub fn watts_strogatz_graph<T: Default, U: Clone + Default>(
+    n: usize,
+    k: usize,
+    p: f64,
+) -> UnGraph<T, U> {
     let mut g = init_graph(n);
-    g.to_watts_strogatz_graph(k, p, weight.clone());
+    g.to_watts_strogatz_graph(k, p, U::default());
     g
 }
 
-pub fn connected_watts_strogatz_graph<T: Default, U: Clone>(n: usize, k: usize, p: f64, weight: U, tries: usize) -> Result<UnGraph<T, U>, String> {
+pub fn connected_watts_strogatz_graph<T: Default, U: Clone + Default>(
+    n: usize,
+    k: usize,
+    p: f64,
+    tries: usize,
+) -> Result<UnGraph<T, U>, String> {
     for _ in 0..tries {
-        let g: UnGraph<T, U> = watts_strogatz_graph(n, k, p, weight.clone());
-        if connected_components(&g) == 1 { return Ok(g); }
+        let g: UnGraph<T, U> = watts_strogatz_graph(n, k, p);
+        if connected_components(&g) == 1 {
+            return Ok(g);
+        }
     }
     return Err("Construction of graph failed!".into());
 }
@@ -74,25 +90,25 @@ impl<T, U: Clone> ToErdosRenyiGraph<U> for UnGraph<T, U> {
     }
 }
 
-pub fn erdos_renyi_graph<T: Default, U: Clone>(n: usize, p: f64, weight: U) -> UnGraph<T, U> {
+pub fn erdos_renyi_graph<T: Default, U: Clone + Default>(n: usize, p: f64) -> UnGraph<T, U> {
     let mut g = init_graph(n);
-    g.to_erdos_renyi_graph(p, weight.clone());
+    g.to_erdos_renyi_graph(p, U::default());
     g
 }
 
-pub fn barabasi_albert_graph<T: Default, U: Clone>(n: usize, m: usize, weight: U) -> UnGraph<T, U> {
+pub fn barabasi_albert_graph<T: Default, U: Clone + Default>(n: usize, m: usize) -> UnGraph<T, U> {
     let mut g = init_graph::<T, U>(0);
     let mut targets = (0..m).map(|_| g.add_node(T::default())).collect::<Vec<_>>();
     let mut repeated_nodes: Vec<NodeIndex> = vec![];
     let mut source = g.add_node(T::default());
-    let mut rng = thread_rng();
+    let mut rng = make_rng!();
     while g.node_count() <= n {
         for (a, &b) in repeat_n(source, m).zip(targets.iter()) {
-            g.add_edge(a, b, weight.clone());
+            g.add_edge(a, b, U::default());
         }
         repeated_nodes.extend(targets);
         repeated_nodes.extend(repeat_n(source, m));
-        targets = repeated_nodes.choose_multiple(&mut rng, m).cloned().collect::<Vec<_>>();
+        targets = rng.n_of(&repeated_nodes, m);
         source = g.add_node(T::default());
     }
     g

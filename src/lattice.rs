@@ -44,9 +44,9 @@ impl<T, U: Clone> ToGrid2DGraph<U> for UnGraph<T, U> {
     }
 }
 
-pub fn grid_2d_graph<T: Default, U: Clone>(m: usize, n: usize, periodic: bool, weight: U) -> UnGraph<T, U> {
+pub fn grid_2d_graph<T: Default, U: Clone+Default>(m: usize, n: usize, periodic: bool) -> UnGraph<T, U> {
     let mut g = init_graph(m * n);
-    g.to_grid2d_graph(m, n, periodic, weight);
+    g.to_grid2d_graph(m, n, periodic, U::default());
     g
 }
 

@@ -34,14 +34,14 @@ impl<T, U: Clone> ToRing<U> for UnGraph<T, U> {
     }
 }
 
-pub fn complete_graph<T: Default, U: Clone>(n: usize, weight: U) -> UnGraph<T, U> {
+pub fn complete_graph<T: Default, U: Clone+Default>(n: usize) -> UnGraph<T, U> {
     let mut g = common::init_graph(n);
-    g.to_complete_graph(weight);
+    g.to_complete_graph(U::default());
     g
 }
 
-pub fn ring<T: Default, U: Clone>(n: usize, weight: U) -> UnGraph<T, U> {
+pub fn ring<T: Default, U: Clone+Default>(n: usize) -> UnGraph<T, U> {
     let mut g = common::init_graph(n);
-    g.to_ring(weight);
+    g.to_ring(U::default());
     g
 }
