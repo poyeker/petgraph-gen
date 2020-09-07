@@ -1,5 +1,20 @@
-use petgraph::prelude::*;
 use crate::common;
+use petgraph::prelude::*;
+
+pub trait ToEmptyGraph<U: Clone> {
+    fn to_empty_graph(&mut self, weight: U);
+}
+
+impl<T, U: Clone> ToEmptyGraph<U> for UnGraph<T, U> {
+    fn to_empty_graph(&mut self, weight: U) {
+        self.clear_edges();
+    }
+}
+
+pub fn empty_graph<T: Default, U: Clone + Default>(n: usize) -> UnGraph<T, U> {
+    let mut g = common::init_graph(n);
+    g
+}
 
 pub trait ToCompleteGraph<U: Clone> {
     fn to_complete_graph(&mut self, weight: U);
@@ -14,6 +29,12 @@ impl<T, U: Clone> ToCompleteGraph<U> for UnGraph<T, U> {
             }
         }
     }
+}
+
+pub fn complete_graph<T: Default, U: Clone + Default>(n: usize) -> UnGraph<T, U> {
+    let mut g = common::init_graph(n);
+    g.to_complete_graph(U::default());
+    g
 }
 
 pub trait ToRing<U: Clone> {
@@ -34,13 +55,7 @@ impl<T, U: Clone> ToRing<U> for UnGraph<T, U> {
     }
 }
 
-pub fn complete_graph<T: Default, U: Clone+Default>(n: usize) -> UnGraph<T, U> {
-    let mut g = common::init_graph(n);
-    g.to_complete_graph(U::default());
-    g
-}
-
-pub fn ring<T: Default, U: Clone+Default>(n: usize) -> UnGraph<T, U> {
+pub fn ring<T: Default, U: Clone + Default>(n: usize) -> UnGraph<T, U> {
     let mut g = common::init_graph(n);
     g.to_ring(U::default());
     g
