@@ -24,7 +24,7 @@ impl<T, U: Clone> ToWattsStrogatzGraph<U> for UnGraph<T, U> {
                     self.add_edge(a, b, weight.clone());
                 }
             }
-            let mut rng = make_rng!();
+            let mut rng = Rand::<Pcg64Mcg>::default();
             for j in 1..(k / 2 + 1) {
                 let target = self
                     .node_indices()
@@ -81,7 +81,7 @@ pub trait ToErdosRenyiGraph<U: Clone> {
 impl<T, U: Clone> ToErdosRenyiGraph<U> for UnGraph<T, U> {
     fn to_erdos_renyi_graph(&mut self, p: f64, weight: U) {
         self.clear_edges();
-        let mut rng = make_rng!();
+        let mut rng = Rand::<Pcg64Mcg>::default();
         for pair in self.node_indices().combinations(2) {
             if rng.rand_float(0., 1.) <= p {
                 self.add_edge(pair[0], pair[1], weight.clone());
@@ -101,7 +101,7 @@ pub fn barabasi_albert_graph<T: Default, U: Clone + Default>(n: usize, m: usize)
     let mut targets = (0..m).map(|_| g.add_node(T::default())).collect::<Vec<_>>();
     let mut repeated_nodes: Vec<NodeIndex> = vec![];
     let mut source = g.add_node(T::default());
-    let mut rng = make_rng!();
+    let mut rng = Rand::<Pcg64Mcg>::default();
     while g.node_count() <= n {
         for (a, &b) in repeat_n(source, m).zip(targets.iter()) {
             g.add_edge(a, b, U::default());
