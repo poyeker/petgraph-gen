@@ -2,20 +2,24 @@ use crate::common;
 use petgraph::prelude::*;
 
 pub trait ToEmptyGraph<U: Clone> {
-    fn to_empty_graph(&mut self, weight: U);
+    fn to_empty_graph(&mut self);
 }
 
 impl<T, U: Clone> ToEmptyGraph<U> for UnGraph<T, U> {
-    fn to_empty_graph(&mut self, weight: U) {
+    fn to_empty_graph(&mut self) {
         self.clear_edges();
     }
 }
 
 pub fn empty_graph<T: Default, U: Clone + Default>(n: usize) -> UnGraph<T, U> {
-    let mut g = common::init_graph(n);
+    let g = common::init_graph(n);
     g
 }
 
+pub fn empty_digraph<T: Default, U: Clone + Default>(n: usize) -> DiGraph<T, U> {
+    let g = common::init_digraph(n);
+    g
+}
 pub trait ToCompleteGraph<U: Clone> {
     fn to_complete_graph(&mut self, weight: U);
 }
